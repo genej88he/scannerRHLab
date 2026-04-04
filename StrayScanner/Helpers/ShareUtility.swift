@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Compression
 
 /// Utility class for creating shareable archives from recording datasets
 class ShareUtility {
@@ -20,8 +19,7 @@ class ShareUtility {
         }
         
         let tempDirectory = FileManager.default.temporaryDirectory
-        let archiveName = "\(recording.name ?? "Recording")_\(recording.id?.uuidString.prefix(8) ?? "unknown").zip"
-        let archiveURL = tempDirectory.appendingPathComponent(archiveName)
+        let archiveURL = tempDirectory.appendingPathComponent(sourceDirectory.lastPathComponent + ".zip")
         
         // Remove existing archive if it exists
         try? FileManager.default.removeItem(at: archiveURL)
@@ -40,20 +38,18 @@ class ShareUtility {
     
     private static func createZipArchive(sourceDirectory: URL, destinationURL: URL) throws {
         let coordinator = NSFileCoordinator()
-        var error: NSError?
-        
-        coordinator.coordinate(readingItemAt: sourceDirectory, options: [.forUploading], error: &error) { (zipURL) in
+        var coordinatorError: NSError?
+        var copyError: Error?
+
+        coordinator.coordinate(readingItemAt: sourceDirectory, options: [.forUploading], error: &coordinatorError) { zipURL in
             do {
-                _ = zipURL.startAccessingSecurityScopedResource()
-                defer { zipURL.stopAccessingSecurityScopedResource() }
-                
                 try FileManager.default.copyItem(at: zipURL, to: destinationURL)
             } catch {
-                print("Failed to create zip: \(error)")
+                copyError = error
             }
         }
-        
-        if let error = error {
+
+        if let error = coordinatorError ?? copyError {
             throw error
         }
     }

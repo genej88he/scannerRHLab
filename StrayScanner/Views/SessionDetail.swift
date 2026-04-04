@@ -9,7 +9,6 @@
 import SwiftUI
 import AVKit
 import CoreData
-import Foundation
 
 class SessionDetailViewModel: ObservableObject {
     private var dataContext: NSManagedObjectContext?
@@ -50,6 +49,7 @@ struct SessionDetailView: View {
     @State private var tempPackageURL: URL?
     @State private var isCreatingPackage = false
     @State private var player: AVPlayer?
+    @State private var shareError: String?
 
     let defaultUrl = URL(fileURLWithPath: "")
 
@@ -106,6 +106,14 @@ struct SessionDetailView: View {
                 }
             }
         }
+        .alert("Export Failed", isPresented: Binding(
+            get: { shareError != nil },
+            set: { if !$0 { shareError = nil } }
+        )) {
+            Button("OK", role: .cancel) { shareError = nil }
+        } message: {
+            Text(shareError ?? "")
+        }
         }
     }
 
@@ -128,7 +136,7 @@ struct SessionDetailView: View {
             } catch {
                 await MainActor.run {
                     isCreatingPackage = false
-                    print("Failed to create package: \(error)")
+                    shareError = error.localizedDescription
                 }
             }
         }

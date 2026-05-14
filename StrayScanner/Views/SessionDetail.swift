@@ -91,6 +91,29 @@ struct SessionDetailView: View {
                 }
             }
             .padding(.top, 20)
+            
+            VStack(alignment: .leading, spacing: 0) {
+                            Text("Wound Measurements")
+                                .font(.footnote)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
+                                .padding(.bottom, 16)
+
+                            WoundRow(label: "Diameter", value: "--", unit: "mm")
+                            Divider()
+                            WoundRow(label: "Depth", value: "--", unit: "mm")
+                            Divider()
+                            WoundRow(label: "Max Diameter", value: "--", unit: "mm")
+                            Divider()
+                            WoundRow(label: "Surface Area", value: "--", unit: "mm²")
+                            Divider()
+                            WoundRow(label: "Perimeter", value: "--", unit: "mm")
+                        }
+                        .padding(20)
+                        .padding(.top, 8)
+            
+            
+            
         }
         .navigationBarTitle(viewModel.title(recording: recording))
         .background(Color("BackgroundColor"))
@@ -163,6 +186,25 @@ struct ShareSheet: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: UIViewControllerRepresentableContext<ShareSheet>) {
+    }
+}
+
+struct WoundRow: View {
+    let label: String
+    let value: String
+    let unit: String
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.body)
+                .foregroundColor(.secondary)
+            Spacer()
+            Text("\(value) \(unit)")
+                .font(.system(.title3, design: .monospaced))
+                .fontWeight(.medium)
+        }
+        .padding(.vertical, 12)
     }
 }
 

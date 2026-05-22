@@ -182,6 +182,9 @@ class RecordSessionViewController : UIViewController, ARSessionDelegate {
             switch encoder.status {
                 case .allGood:
                     saveRecording(started, encoder)
+                    DispatchQueue.main.async {
+                        self.navigateToMeasurement(datasetDirectory: encoder.datasetDirectory)
+                    }
                 case .videoEncodingError:
                     showError()
                 case .directoryCreationError:
@@ -290,4 +293,12 @@ class RecordSessionViewController : UIViewController, ARSessionDelegate {
         }
         return 0
     }
+
+
+    private func navigateToMeasurement(datasetDirectory: URL) {
+        let vc = WoundMeasurementViewController(datasetDirectory: datasetDirectory)
+        vc.modalPresentationStyle = .fullScreen
+        self.present(vc, animated: true)
+    }
 }
+

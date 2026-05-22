@@ -12,31 +12,44 @@ struct SessionRow: View {
     var session: Recording
     
     var body: some View {
-        let duration = String(format: "%ds", Int(round(session.duration)))
         HStack {
             VStack(alignment: .leading) {
                 Text(sessionTitle())
                     .multilineTextAlignment(.leading)
                     .padding(.leading, 0.0)
-                Text("\(duration)")
+                Text(sessionDate())
                     .font(.caption)
+                    .foregroundColor(.secondary)
                     .multilineTextAlignment(.leading)
                     .padding(.leading, 0.0)
             }
             Spacer()
         }
+
     }
     
     private func sessionTitle() -> String {
+        if let name = session.name, !name.isEmpty, !name.hasPrefix("Recording ") {
+            return name
+        }
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .long
         dateFormatter.timeStyle = .short
-        
         if let created = session.createdAt {
             return dateFormatter.string(from: created)
         } else {
             return "Session"
         }
+    }
+    
+    private func sessionDate() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .long
+        dateFormatter.timeStyle = .short
+        if let created = session.createdAt {
+            return dateFormatter.string(from: created)
+        }
+        return ""
     }
 }
 

@@ -724,7 +724,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"StrayScanner/Preview Content\"";
-				DEVELOPMENT_TEAM = AS9PDG6AC3;
+				DEVELOPMENT_TEAM = 94KKYBKVV5;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = StrayScanner/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
@@ -733,7 +733,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.marianny.strayscanner;
+				PRODUCT_BUNDLE_IDENTIFIER = com.genejiang.strayscanner;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = StrayScanner/BridgeHeader.h;
@@ -751,7 +751,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"StrayScanner/Preview Content\"";
-				DEVELOPMENT_TEAM = AS9PDG6AC3;
+				DEVELOPMENT_TEAM = 94KKYBKVV5;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = StrayScanner/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
@@ -760,7 +760,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.marianny.strayscanner;
+				PRODUCT_BUNDLE_IDENTIFIER = com.genejiang.strayscanner;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = StrayScanner/BridgeHeader.h;

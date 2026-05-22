@@ -19,15 +19,26 @@ class SessionDetailViewModel: ObservableObject {
     }
     
     func title(recording: Recording) -> String {
+        if let name = recording.name, !name.isEmpty, !name.hasPrefix("Recording ") {
+            return name
+        }
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .long
         dateFormatter.timeStyle = .short
-        
         if let created = recording.createdAt {
             return dateFormatter.string(from: created)
-        } else {
-            return recording.name ?? "Recording"
         }
+        return "Recording"
+    }
+    
+    func date(recording: Recording) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .long
+        dateFormatter.timeStyle = .short
+        if let created = recording.createdAt {
+            return dateFormatter.string(from: created)
+        }
+        return ""
     }
 
     func delete(recording: Recording) {
@@ -99,15 +110,15 @@ struct SessionDetailView: View {
                                 .foregroundColor(.secondary)
                                 .padding(.bottom, 16)
 
-                            WoundRow(label: "Diameter", value: "--", unit: "mm")
-                            Divider()
-                            WoundRow(label: "Depth", value: "--", unit: "mm")
-                            Divider()
-                            WoundRow(label: "Max Diameter", value: "--", unit: "mm")
-                            Divider()
-                            WoundRow(label: "Surface Area", value: "--", unit: "mm²")
-                            Divider()
-                            WoundRow(label: "Perimeter", value: "--", unit: "mm")
+                                WoundRow(label: "Diameter", value: recording.woundDiameter > 0 ? String(format: "%.1f", recording.woundDiameter) : "--", unit: "mm")
+                                Divider()
+                                WoundRow(label: "Depth", value: recording.woundDepth > 0 ? String(format: "%.1f", recording.woundDepth) : "--", unit: "mm")
+                                Divider()
+                                WoundRow(label: "Max Diameter", value: recording.woundMaxDiameter > 0 ? String(format: "%.1f", recording.woundMaxDiameter) : "--", unit: "mm")
+                                Divider()
+                                WoundRow(label: "Surface Area", value: "--", unit: "mm²")
+                                Divider()
+                                WoundRow(label: "Perimeter", value: "--", unit: "mm")
                         }
                         .padding(20)
                         .padding(.top, 8)
@@ -115,7 +126,18 @@ struct SessionDetailView: View {
             
             
         }
-        .navigationBarTitle(viewModel.title(recording: recording))
+        .navigationBarTitle("")
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                VStack(spacing: 2) {
+                    Text(viewModel.title(recording: recording))
+                        .font(.headline)
+                    Text(viewModel.date(recording: recording))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
         .background(Color("BackgroundColor"))
         .sheet(isPresented: $showingShareSheet) {
             if let packageURL = tempPackageURL {

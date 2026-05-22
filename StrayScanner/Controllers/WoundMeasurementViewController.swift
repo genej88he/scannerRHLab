@@ -43,10 +43,14 @@
 
 import UIKit
 import simd
+import CoreData
+
 
 class WoundMeasurementViewController: UIViewController {
     
     private let datasetDirectory: URL
+    private var recording: Recording
+    
     
     // UI Elements
     private let titleLabel = UILabel()
@@ -57,8 +61,9 @@ class WoundMeasurementViewController: UIViewController {
     private let depthLabel = UILabel()
     private let closeButton = UIButton(type: .system)
     
-    init(datasetDirectory: URL) {
+    init(datasetDirectory: URL, recordingEntry: Recording) {
         self.datasetDirectory = datasetDirectory
+        self.recording = recordingEntry
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -402,9 +407,49 @@ class WoundMeasurementViewController: UIViewController {
         widthLabel.text = String(format: "Width:  %.1f mm", result.width)
         depthLabel.text = String(format: "Depth:  %.1f mm", result.depth)
         measurementsView.isHidden = false
+        
+        recording.woundDiameter = Double(result.length)
+        recording.woundMaxDiameter = Double(result.width)
+        recording.woundDepth = Double(result.depth)
+        
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+        let viewContext = appDelegate.persistentContainer.viewContext
+        viewContext.perform {
+            let request = NSFetchRequest<Recording>(entityName: "Recording")
+            request.predicate = NSPredicate(format: "id == %@", self.recording.id! as CVarArg)
+            if let rec = try? viewContext.fetch(request).first {
+                rec.woundDiameter = Double(result.length)
+                rec.woundMaxDiameter = Double(result.width)
+                rec.woundDepth = Double(result.depth)
+                try? viewContext.save()
+            }
+        }
     }
     
     @objc private func closeTapped() {
-        dismiss(animated: true)
+        let alert = UIAlertController(title: "Name this recording", message: "Give this recording a name so you can identify it later.", preferredStyle: .alert)
+        alert.addTextField { textField in
+            textField.placeholder = "e.g. Patient A - left leg"
+            textField.autocapitalizationType = .sentences
+        }
+        alert.addAction(UIAlertAction(title: "Save", style: .default) { _ in
+            if let name = alert.textFields?.first?.text, !name.isEmpty {
+                guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+                let viewContext = appDelegate.persistentContainer.viewContext
+                viewContext.perform {
+                    let request = NSFetchRequest<Recording>(entityName: "Recording")
+                    request.predicate = NSPredicate(format: "id == %@", self.recording.id! as CVarArg)
+                    if let rec = try? viewContext.fetch(request).first {
+                        rec.name = name
+                        try? viewContext.save()
+                    }
+                }
+            }
+            self.dismiss(animated: true)
+        })
+        alert.addAction(UIAlertAction(title: "Skip", style: .cancel) { _ in
+            self.dismiss(animated: true)
+        })
+        present(alert, animated: true)
     }
 }

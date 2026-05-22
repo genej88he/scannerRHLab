@@ -23,6 +23,11 @@ extension Recording {
     @NSManaged public var id: UUID?
     @NSManaged public var rgbFilePath: String?
     @NSManaged public var depthFilePath: String?
+    @NSManaged public var woundDiameter: Double
+    @NSManaged public var woundMaxDiameter: Double
+    @NSManaged public var woundDepth: Double
+    @NSManaged public var woundSurfaceArea: Double
+    @NSManaged public var woundPerimeter: Double
 
     func directoryPath() -> URL? {
         if let path = self.rgbFilePath {

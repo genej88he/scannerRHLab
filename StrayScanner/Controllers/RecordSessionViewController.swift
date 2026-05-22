@@ -180,11 +180,13 @@ class RecordSessionViewController : UIViewController, ARSessionDelegate {
         datasetEncoder?.wrapUp()
         if let encoder = datasetEncoder {
             switch encoder.status {
-                case .allGood:
-                    saveRecording(started, encoder)
-                    DispatchQueue.main.async {
-                        self.navigateToMeasurement(datasetDirectory: encoder.datasetDirectory)
+            case .allGood:
+                let savedRecording = saveRecording(started, encoder)
+                DispatchQueue.main.async {
+                    if let rec = savedRecording {
+                        self.navigateToMeasurement(datasetDirectory: encoder.datasetDirectory, recording: rec)
                     }
+                }
                 case .videoEncodingError:
                     showError()
                 case .directoryCreationError:
@@ -196,7 +198,7 @@ class RecordSessionViewController : UIViewController, ARSessionDelegate {
         self.dismissFunction?()
     }
 
-    private func saveRecording(_ started: Date, _ encoder: DatasetEncoder) {
+    private func saveRecording(_ started: Date, _ encoder: DatasetEncoder) -> Recording? {
         let sessionCount = countSessions()
         
         let duration = Date().timeIntervalSince(started)
@@ -213,6 +215,7 @@ class RecordSessionViewController : UIViewController, ARSessionDelegate {
         } catch let error as NSError {
             print("Could not save recording. \(error), \(error.userInfo)")
         }
+        return recording
     }
 
     private func showError() {
@@ -295,8 +298,8 @@ class RecordSessionViewController : UIViewController, ARSessionDelegate {
     }
 
 
-    private func navigateToMeasurement(datasetDirectory: URL) {
-        let vc = WoundMeasurementViewController(datasetDirectory: datasetDirectory)
+    private func navigateToMeasurement(datasetDirectory: URL, recording: Recording) {
+        let vc = WoundMeasurementViewController(datasetDirectory: datasetDirectory, recordingEntry: recording)
         vc.modalPresentationStyle = .fullScreen
         self.present(vc, animated: true)
     }

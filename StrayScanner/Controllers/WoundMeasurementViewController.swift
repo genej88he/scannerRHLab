@@ -80,75 +80,120 @@ class WoundMeasurementViewController: UIViewController {
     
     private func setupUI() {
         // Title
-        titleLabel.text = "Wound Measurement"
-        titleLabel.textColor = .white
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        titleLabel.text = "Wound Measurements"
+        titleLabel.textColor = UIColor.label
+        titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(titleLabel)
         
         // Status
         statusLabel.text = "Processing scan..."
-        statusLabel.textColor = .lightGray
-        statusLabel.font = UIFont.systemFont(ofSize: 16)
+        statusLabel.textColor = UIColor.secondaryLabel
+        statusLabel.font = UIFont.systemFont(ofSize: 14)
         statusLabel.textAlignment = .center
         statusLabel.numberOfLines = 0
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(statusLabel)
         
         // Measurements container
-        measurementsView.backgroundColor = UIColor.white.withAlphaComponent(0.1)
-        measurementsView.layer.cornerRadius = 12
+        measurementsView.backgroundColor = .clear
         measurementsView.translatesAutoresizingMaskIntoConstraints = false
         measurementsView.isHidden = true
         view.addSubview(measurementsView)
         
         // Measurement labels
         for label in [lengthLabel, widthLabel, depthLabel] {
-            label.textColor = .white
-            label.font = UIFont.systemFont(ofSize: 18)
-            label.textAlignment = .center
+            label.textColor = UIColor.label
+            label.font = UIFont.monospacedDigitSystemFont(ofSize: 20, weight: .medium)
+            label.textAlignment = .right
             label.translatesAutoresizingMaskIntoConstraints = false
             measurementsView.addSubview(label)
         }
         
+        // Add dividers
+        let divider1 = makeDivider()
+        let divider2 = makeDivider()
+        measurementsView.addSubview(divider1)
+        measurementsView.addSubview(divider2)
+        
+        // Length row label
+        let lengthTitle = makeRowLabel("Length")
+        let widthTitle = makeRowLabel("Width")
+        let depthTitle = makeRowLabel("Depth")
+        measurementsView.addSubview(lengthTitle)
+        measurementsView.addSubview(widthTitle)
+        measurementsView.addSubview(depthTitle)
+        
         // Close button
         closeButton.setTitle("Close", for: .normal)
-        closeButton.setTitleColor(.white, for: .normal)
-        closeButton.backgroundColor = UIColor.systemPink
-        closeButton.layer.cornerRadius = 12
+        closeButton.setTitleColor(UIColor.systemBlue, for: .normal)
+        closeButton.titleLabel?.font = UIFont.systemFont(ofSize: 17)
+        closeButton.backgroundColor = .clear
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
         view.addSubview(closeButton)
         
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 32),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
-            statusLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 24),
-            statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            statusLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12),
+            statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
             measurementsView.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 32),
-            measurementsView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            measurementsView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            measurementsView.heightAnchor.constraint(equalToConstant: 160),
+            measurementsView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            measurementsView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            measurementsView.heightAnchor.constraint(equalToConstant: 180),
             
-            lengthLabel.topAnchor.constraint(equalTo: measurementsView.topAnchor, constant: 20),
-            lengthLabel.centerXAnchor.constraint(equalTo: measurementsView.centerXAnchor),
+            lengthTitle.topAnchor.constraint(equalTo: measurementsView.topAnchor, constant: 12),
+            lengthTitle.leadingAnchor.constraint(equalTo: measurementsView.leadingAnchor),
+            lengthLabel.centerYAnchor.constraint(equalTo: lengthTitle.centerYAnchor),
+            lengthLabel.trailingAnchor.constraint(equalTo: measurementsView.trailingAnchor),
             
-            widthLabel.topAnchor.constraint(equalTo: lengthLabel.bottomAnchor, constant: 16),
-            widthLabel.centerXAnchor.constraint(equalTo: measurementsView.centerXAnchor),
+            divider1.topAnchor.constraint(equalTo: lengthTitle.bottomAnchor, constant: 12),
+            divider1.leadingAnchor.constraint(equalTo: measurementsView.leadingAnchor),
+            divider1.trailingAnchor.constraint(equalTo: measurementsView.trailingAnchor),
+            divider1.heightAnchor.constraint(equalToConstant: 0.5),
             
-            depthLabel.topAnchor.constraint(equalTo: widthLabel.bottomAnchor, constant: 16),
-            depthLabel.centerXAnchor.constraint(equalTo: measurementsView.centerXAnchor),
+            widthTitle.topAnchor.constraint(equalTo: divider1.bottomAnchor, constant: 12),
+            widthTitle.leadingAnchor.constraint(equalTo: measurementsView.leadingAnchor),
+            widthLabel.centerYAnchor.constraint(equalTo: widthTitle.centerYAnchor),
+            widthLabel.trailingAnchor.constraint(equalTo: measurementsView.trailingAnchor),
+            
+            divider2.topAnchor.constraint(equalTo: widthTitle.bottomAnchor, constant: 12),
+            divider2.leadingAnchor.constraint(equalTo: measurementsView.leadingAnchor),
+            divider2.trailingAnchor.constraint(equalTo: measurementsView.trailingAnchor),
+            divider2.heightAnchor.constraint(equalToConstant: 0.5),
+            
+            depthTitle.topAnchor.constraint(equalTo: divider2.bottomAnchor, constant: 12),
+            depthTitle.leadingAnchor.constraint(equalTo: measurementsView.leadingAnchor),
+            depthLabel.centerYAnchor.constraint(equalTo: depthTitle.centerYAnchor),
+            depthLabel.trailingAnchor.constraint(equalTo: measurementsView.trailingAnchor),
             
             closeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -32),
             closeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             closeButton.widthAnchor.constraint(equalToConstant: 200),
             closeButton.heightAnchor.constraint(equalToConstant: 50)
         ])
+    }
+
+    private func makeDivider() -> UIView {
+        let v = UIView()
+        v.backgroundColor = UIColor.separator
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }
+
+    private func makeRowLabel(_ text: String) -> UILabel {
+        let label = UILabel()
+        label.text = text
+        label.textColor = UIColor.secondaryLabel
+        label.font = UIFont.systemFont(ofSize: 17)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }
     
     private func processDataset() {
@@ -403,14 +448,10 @@ class WoundMeasurementViewController: UIViewController {
     }
     private func showResults(_ result: MeasurementResult) {
         statusLabel.text = "Scan processed successfully."
-        lengthLabel.text = String(format: "Length: %.1f mm", result.length)
-        widthLabel.text = String(format: "Width:  %.1f mm", result.width)
-        depthLabel.text = String(format: "Depth:  %.1f mm", result.depth)
+        lengthLabel.text = String(format: "%.1f mm", result.length)
+        widthLabel.text = String(format: "%.1f mm", result.width)
+        depthLabel.text = String(format: "%.1f mm", result.depth)
         measurementsView.isHidden = false
-        
-        recording.woundDiameter = Double(result.length)
-        recording.woundMaxDiameter = Double(result.width)
-        recording.woundDepth = Double(result.depth)
         
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
         let viewContext = appDelegate.persistentContainer.viewContext

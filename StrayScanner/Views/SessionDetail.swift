@@ -67,65 +67,70 @@ struct SessionDetailView: View {
     var body: some View {
         let width = UIScreen.main.bounds.size.width
         let height = width * 0.75
-        ZStack {
-        Color("BackgroundColor")
-            .edgesIgnoringSafeArea(.all)
-        VStack {
-            VideoPlayer(player: player ?? AVPlayer(url: defaultUrl))
-                .frame(width: width, height: height)
-                .padding(.horizontal, 0.0)
-                .onAppear {
-                    if player == nil {
-                        player = AVPlayer(url: recording.absoluteRgbPath() ?? defaultUrl)
-                    }
-                }
-            
-            HStack(spacing: 20) {
-                Button(action: shareItem) {
-                    HStack {
-                        if isCreatingPackage {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                        } else {
-                            Image(systemName: "square.and.arrow.up")
+        ScrollView {
+            VStack(spacing: 0) {
+                VideoPlayer(player: player ?? AVPlayer(url: defaultUrl))
+                    .frame(width: width, height: height)
+                    .onAppear {
+                        if player == nil {
+                            player = AVPlayer(url: recording.absoluteRgbPath() ?? defaultUrl)
                         }
-                        Text(isCreatingPackage ? "Preparing..." : "Share")
-                            .fixedSize()
                     }
-                    .foregroundColor(isCreatingPackage ? .gray : .blue)
-                    .frame(minWidth: 100)
-                }
-                .disabled(isCreatingPackage)
-                
-                Button(action: deleteItem) {
-                    Text("Delete").foregroundColor(Color("DangerColor"))
-                }
-            }
-            .padding(.top, 20)
-            
-            VStack(alignment: .leading, spacing: 0) {
-                            Text("Wound Measurements")
-                                .font(.footnote)
-                                .fontWeight(.medium)
-                                .foregroundColor(.secondary)
-                                .padding(.bottom, 16)
 
-                                WoundRow(label: "Diameter", value: recording.woundDiameter > 0 ? String(format: "%.1f", recording.woundDiameter) : "--", unit: "mm")
-                                Divider()
-                                WoundRow(label: "Depth", value: recording.woundDepth > 0 ? String(format: "%.1f", recording.woundDepth) : "--", unit: "mm")
-                                Divider()
-                                WoundRow(label: "Max Diameter", value: recording.woundMaxDiameter > 0 ? String(format: "%.1f", recording.woundMaxDiameter) : "--", unit: "mm")
-                                Divider()
-                                WoundRow(label: "Surface Area", value: "--", unit: "mm²")
-                                Divider()
-                                WoundRow(label: "Perimeter", value: "--", unit: "mm")
-                        }
-                        .padding(20)
+                if let photoURL = recording.absolutePhoto2DPath(),
+                   let uiImage = UIImage(contentsOfFile: photoURL.path) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: width)
                         .padding(.top, 8)
-            
-            
-            
+                }
+
+                HStack(spacing: 20) {
+                    Button(action: shareItem) {
+                        HStack {
+                            if isCreatingPackage {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "square.and.arrow.up")
+                            }
+                            Text(isCreatingPackage ? "Preparing..." : "Share")
+                                .fixedSize()
+                        }
+                        .foregroundColor(isCreatingPackage ? .gray : .blue)
+                        .frame(minWidth: 100)
+                    }
+                    .disabled(isCreatingPackage)
+
+                    Button(action: deleteItem) {
+                        Text("Delete").foregroundColor(Color("DangerColor"))
+                    }
+                }
+                .padding(.top, 20)
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Wound Measurements")
+                        .font(.footnote)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                        .padding(.bottom, 16)
+
+                    WoundRow(label: "Diameter", value: recording.woundDiameter > 0 ? String(format: "%.1f", recording.woundDiameter) : "--", unit: "mm")
+                    Divider()
+                    WoundRow(label: "Depth", value: recording.woundDepth > 0 ? String(format: "%.1f", recording.woundDepth) : "--", unit: "mm")
+                    Divider()
+                    WoundRow(label: "Max Diameter", value: recording.woundMaxDiameter > 0 ? String(format: "%.1f", recording.woundMaxDiameter) : "--", unit: "mm")
+                    Divider()
+                    WoundRow(label: "Surface Area", value: "--", unit: "mm\u{00B2}")
+                    Divider()
+                    WoundRow(label: "Perimeter", value: "--", unit: "mm")
+                }
+                .padding(20)
+                .padding(.top, 8)
+            }
         }
+        .background(Color("BackgroundColor").ignoresSafeArea())
         .navigationBarTitle("")
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -138,12 +143,10 @@ struct SessionDetailView: View {
                 }
             }
         }
-        .background(Color("BackgroundColor"))
         .sheet(isPresented: $showingShareSheet) {
             if let packageURL = tempPackageURL {
                 ShareSheet(activityItems: [packageURL]) { activityType, completed, returnedItems, activityError in
                     DispatchQueue.main.async {
-                        // Clean up temporary package after sharing
                         try? FileManager.default.removeItem(at: packageURL)
                         tempPackageURL = nil
                         showingShareSheet = false
@@ -159,17 +162,15 @@ struct SessionDetailView: View {
         } message: {
             Text(shareError ?? "")
         }
-        }
     }
 
     func deleteItem() {
         viewModel.delete(recording: recording)
         self.presentationMode.wrappedValue.dismiss()
     }
-    
+
     func shareItem() {
         isCreatingPackage = true
-        
         Task {
             do {
                 let packageURL = try await ShareUtility.createShareableArchive(for: recording)
@@ -192,12 +193,12 @@ struct ShareSheet: UIViewControllerRepresentable {
     let activityItems: [Any]
     let applicationActivities: [UIActivity]? = nil
     let completionWithItemsHandler: UIActivityViewController.CompletionWithItemsHandler?
-    
+
     init(activityItems: [Any], completionHandler: UIActivityViewController.CompletionWithItemsHandler? = nil) {
         self.activityItems = activityItems
         self.completionWithItemsHandler = completionHandler
     }
-    
+
     func makeUIViewController(context: UIViewControllerRepresentableContext<ShareSheet>) -> UIActivityViewController {
         let controller = UIActivityViewController(
             activityItems: activityItems,
@@ -206,9 +207,8 @@ struct ShareSheet: UIViewControllerRepresentable {
         controller.completionWithItemsHandler = completionWithItemsHandler
         return controller
     }
-    
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: UIViewControllerRepresentableContext<ShareSheet>) {
-    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: UIViewControllerRepresentableContext<ShareSheet>) {}
 }
 
 struct WoundRow: View {

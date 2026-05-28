@@ -17,6 +17,7 @@ extension Recording {
         return NSFetchRequest<Recording>(entityName: "Recording")
     }
 
+    @NSManaged public var photo2DPath: String?
     @NSManaged public var createdAt: Date?
     @NSManaged public var duration: Double
     @NSManaged public var name: String?
@@ -51,7 +52,7 @@ extension Recording {
         return Optional.none
     }
 
-    private func pathsRelativeTo() -> URL {
+    func pathsRelativeTo() -> URL {
         return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     }
 }

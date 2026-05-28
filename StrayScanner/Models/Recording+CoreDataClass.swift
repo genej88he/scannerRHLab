@@ -29,4 +29,11 @@ public class Recording: NSManagedObject {
             }
         }
     }
+    
+    func absolutePhoto2DPath() -> URL? {
+        if let path = self.photo2DPath {
+            return URL(fileURLWithPath: path, relativeTo: pathsRelativeTo())
+        }
+        return nil
+    }
 }

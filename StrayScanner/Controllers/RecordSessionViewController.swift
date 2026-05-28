@@ -12,6 +12,7 @@ import Metal
 import ARKit
 import CoreData
 import CoreMotion
+import AVFoundation
 
 let FpsDividers: [Int] = [1, 2, 4, 12, 60]
 let AvailableFpsSettings: [Int] = FpsDividers.map { Int(60 / $0) }
@@ -40,6 +41,9 @@ class RecordSessionViewController : UIViewController, ARSessionDelegate {
     private var datasetEncoder: DatasetEncoder?
     private let imuOperationQueue = OperationQueue()
     private var chosenFpsSetting: Int = 0
+    private var capturePhotoButton: UIButton!
+    private var photo2DFilePath: String?
+    
     @IBOutlet private var rgbView: MetalView!
     @IBOutlet private var depthView: MetalView!
     @IBOutlet private var recordButton: RecordButton!
@@ -73,6 +77,22 @@ class RecordSessionViewController : UIViewController, ARSessionDelegate {
         fpsButton.layer.cornerRadius = 12.0
         
         imuOperationQueue.qualityOfService = .userInitiated
+        
+        capturePhotoButton = UIButton(type: .system)
+        capturePhotoButton.setImage(UIImage(systemName: "camera.circle.fill"), for: .normal)
+        capturePhotoButton.tintColor = .white
+        capturePhotoButton.contentVerticalAlignment = .fill
+        capturePhotoButton.contentHorizontalAlignment = .fill
+        capturePhotoButton.translatesAutoresizingMaskIntoConstraints = false
+        capturePhotoButton.isHidden = true
+        capturePhotoButton.addTarget(self, action: #selector(capturePhoto), for: .touchUpInside)
+        view.addSubview(capturePhotoButton)
+        NSLayoutConstraint.activate([
+            capturePhotoButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
+            capturePhotoButton.centerYAnchor.constraint(equalTo: recordButton.centerYAnchor),
+            capturePhotoButton.widthAnchor.constraint(equalToConstant: 60),
+            capturePhotoButton.heightAnchor.constraint(equalToConstant: 60)
+        ])
     }
 
     override func viewDidDisappear(_ animated: Bool) {
@@ -159,6 +179,11 @@ class RecordSessionViewController : UIViewController, ARSessionDelegate {
 
     private func startRecording() {
         self.startedRecording = Date()
+        capturePhotoButton.isHidden = false
+        let config = UIImage.SymbolConfiguration(pointSize: 44)
+        capturePhotoButton.setImage(UIImage(systemName: "camera.circle.fill", withConfiguration: config), for: .normal)
+        capturePhotoButton.tintColor = .white
+        photo2DFilePath = nil
         updateTime()
         updateLabelTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             self.updateTime()
@@ -172,6 +197,7 @@ class RecordSessionViewController : UIViewController, ARSessionDelegate {
             print("Hasn't started recording. Something is wrong.")
             return
         }
+        capturePhotoButton.isHidden = true;
         startedRecording = nil
         updateLabelTimer?.invalidate()
         updateLabelTimer = nil
@@ -211,6 +237,9 @@ class RecordSessionViewController : UIViewController, ARSessionDelegate {
         recording.setValue(datasetEncoder!.rgbFilePath.relativeString, forKey: "rgbFilePath")
         recording.setValue(datasetEncoder!.depthFilePath.relativeString, forKey: "depthFilePath")
         do {
+            if let photoPath = self.photo2DFilePath {
+                recording.setValue(photoPath, forKey: "photo2DPath")
+            }
             try self.dataContext.save()
         } catch let error as NSError {
             print("Could not save recording. \(error), \(error.userInfo)")
@@ -302,6 +331,35 @@ class RecordSessionViewController : UIViewController, ARSessionDelegate {
         let vc = WoundMeasurementViewController(datasetDirectory: datasetDirectory, recordingEntry: recording)
         vc.modalPresentationStyle = .fullScreen
         self.present(vc, animated: true)
+    }
+    
+    @objc private func capturePhoto() {
+        guard let frame = session.currentFrame else { return }
+        let pixelBuffer = frame.capturedImage
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        let context = CIContext()
+        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return }
+        let uiImage = UIImage(cgImage: cgImage)
+        
+        guard let data = uiImage.jpegData(compressionQuality: 0.9) else { return }
+        let fileName = "photo2D_\(UUID().uuidString).jpg"
+        let docsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileURL = docsDir.appendingPathComponent(fileName)
+        try? data.write(to: fileURL)
+        self.photo2DFilePath = fileName
+        
+        let flash = UIView(frame: self.view.bounds)
+        flash.backgroundColor = .white
+        flash.alpha = 0.8
+        self.view.addSubview(flash)
+        UIView.animate(withDuration: 0.3, animations: {
+            flash.alpha = 0
+        }, completion: { _ in
+            flash.removeFromSuperview()
+        })
+        let config = UIImage.SymbolConfiguration(pointSize: 44)
+            capturePhotoButton.setImage(UIImage(systemName: "checkmark.circle.fill", withConfiguration: config), for: .normal)
+            capturePhotoButton.tintColor = .green
     }
 }
 

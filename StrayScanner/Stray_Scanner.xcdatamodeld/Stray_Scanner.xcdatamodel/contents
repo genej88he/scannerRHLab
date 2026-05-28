@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24837" systemVersion="25D2128" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24512" systemVersion="24G720" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Recording" representedClassName="Recording" syncable="YES" coreSpotlightDisplayNameExpression="Scan">
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="depthFilePath" optional="YES" attributeType="String"/>
         <attribute name="duration" attributeType="Double" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" attributeType="String" spotlightIndexingEnabled="YES"/>
+        <attribute name="photo2DPath" optional="YES" attributeType="String"/>
         <attribute name="rgbFilePath" optional="YES" attributeType="String"/>
         <attribute name="woundDepth" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="woundDiameter" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>

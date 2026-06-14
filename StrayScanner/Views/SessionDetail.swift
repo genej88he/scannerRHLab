@@ -48,6 +48,8 @@ struct SessionDetailView: View {
     @State private var showingShareSheet = false
     @State private var tempPackageURL: URL?
     @State private var isCreatingPackage = false
+    @State private var isExportingPLY = false
+    @State private var plyProgress: Double = 0
     @State private var player: AVPlayer?
     @State private var shareError: String?
 
@@ -85,7 +87,23 @@ struct SessionDetailView: View {
                     .frame(minWidth: 100)
                 }
                 .disabled(isCreatingPackage)
-                
+
+                Button(action: exportPLY) {
+                    HStack {
+                        if isExportingPLY {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "cube.transparent")
+                        }
+                        Text(isExportingPLY ? "\(Int(plyProgress * 100))%" : "Export PLY")
+                            .fixedSize()
+                    }
+                    .foregroundColor(isExportingPLY ? .gray : .blue)
+                    .frame(minWidth: 100)
+                }
+                .disabled(isExportingPLY || isCreatingPackage)
+
                 Button(action: deleteItem) {
                     Text("Delete").foregroundColor(Color("DangerColor"))
                 }
@@ -122,6 +140,36 @@ struct SessionDetailView: View {
         self.presentationMode.wrappedValue.dismiss()
     }
     
+    func exportPLY() {
+        guard let directory = recording.directoryPath() else {
+            shareError = "Recording directory not found."
+            return
+        }
+        isExportingPLY = true
+        plyProgress = 0
+
+        Task.detached(priority: .userInitiated) {
+            do {
+                let exporter = PointCloudExporter(datasetDirectory: directory)
+                let plyURL = try exporter.export { progress in
+                    Task { @MainActor in
+                        plyProgress = progress
+                    }
+                }
+                await MainActor.run {
+                    tempPackageURL = plyURL
+                    isExportingPLY = false
+                    showingShareSheet = true
+                }
+            } catch {
+                await MainActor.run {
+                    isExportingPLY = false
+                    shareError = error.localizedDescription
+                }
+            }
+        }
+    }
+
     func shareItem() {
         isCreatingPackage = true
         

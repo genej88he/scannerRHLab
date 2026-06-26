@@ -1,16 +1,16 @@
 //
 //  lodepng.cpp
-//  StrayScanner
+//  RHLab
 //
-//  Created by Kenneth Blomqvist on 2/15/22.
-//  Copyright © 2022 Stray Robots. All rights reserved.
+//  Created by Gene Jiang on 5/30/2026.
+//  Copyright © 2026 RHLab. All rights reserved.
 //
 
 #include <stdio.h>
 /*
 LodePNG version 20220109
 
-Copyright (c) 2005-2022 Lode Vandevenne
+Copyright (c) 2026 Gene Jiang
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages

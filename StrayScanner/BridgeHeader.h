@@ -1,9 +1,9 @@
 //
 //  BridgeHeader.h
-//  Stray Scanner
+//  RHLab
 //
-//  Created by Kenneth Blomqvist on 11/29/20.
-//  Copyright © 2020 Stray Robots. All rights reserved.
+//  Created by Gene Jiang on 5/30/26.
+//  Copyright © 2026 Stray Robots. All rights reserved.
 //
 
 #ifndef BridgeHeader_h

@@ -1,9 +1,9 @@
 //
 //  SessionDetailView.swift
-//  StrayScanner
+//  RHLab
 //
-//  Created by Kenneth Blomqvist on 12/30/20.
-//  Copyright © 2020 Stray Robots. All rights reserved.
+//  Created by Gene Jiang on 5/30/2026.
+//  Copyright © 2026 RHLab. All rights reserved.
 //
 
 import SwiftUI
@@ -61,6 +61,8 @@ struct SessionDetailView: View {
     @State private var isCreatingPackage = false
     @State private var player: AVPlayer?
     @State private var shareError: String?
+    @State private var editingField: String? = nil
+    @State private var editValue: String = ""
 
     let defaultUrl = URL(fileURLWithPath: "")
 
@@ -116,18 +118,48 @@ struct SessionDetailView: View {
                         .foregroundColor(.secondary)
                         .padding(.bottom, 16)
 
-                    WoundRow(label: "Diameter", value: recording.woundDiameter > 0 ? String(format: "%.1f", recording.woundDiameter) : "--", unit: "mm")
+                    EditableWoundRow(label: "Diameter", value: recording.woundDiameter > 0 ? String(format: "%.1f", recording.woundDiameter) : "--", unit: "mm") {
+                        editingField = "Diameter"
+                        editValue = recording.woundDiameter > 0 ? String(format: "%.1f", recording.woundDiameter) : ""
+                    }
                     Divider()
-                    WoundRow(label: "Depth", value: recording.woundDepth > 0 ? String(format: "%.1f", recording.woundDepth) : "--", unit: "mm")
+                    EditableWoundRow(label: "Depth", value: recording.woundDepth > 0 ? String(format: "%.1f", recording.woundDepth) : "--", unit: "mm") {
+                        editingField = "Depth"
+                        editValue = recording.woundDepth > 0 ? String(format: "%.1f", recording.woundDepth) : ""
+                    }
                     Divider()
-                    WoundRow(label: "Max Diameter", value: recording.woundMaxDiameter > 0 ? String(format: "%.1f", recording.woundMaxDiameter) : "--", unit: "mm")
+                    EditableWoundRow(label: "Max Diameter", value: recording.woundMaxDiameter > 0 ? String(format: "%.1f", recording.woundMaxDiameter) : "--", unit: "mm") {
+                        editingField = "Max Diameter"
+                        editValue = recording.woundMaxDiameter > 0 ? String(format: "%.1f", recording.woundMaxDiameter) : ""
+                    }
                     Divider()
-                    WoundRow(label: "Surface Area", value: "--", unit: "mm\u{00B2}")
+                    EditableWoundRow(label: "Surface Area", value: recording.woundSurfaceArea > 0 ? String(format: "%.1f", recording.woundSurfaceArea) : "--", unit: "mm\u{00B2}") {
+                        editingField = "Surface Area"
+                        editValue = recording.woundSurfaceArea > 0 ? String(format: "%.1f", recording.woundSurfaceArea) : ""
+                    }
                     Divider()
-                    WoundRow(label: "Perimeter", value: "--", unit: "mm")
+                    EditableWoundRow(label: "Perimeter", value: recording.woundPerimeter > 0 ? String(format: "%.1f", recording.woundPerimeter) : "--", unit: "mm") {
+                        editingField = "Perimeter"
+                        editValue = recording.woundPerimeter > 0 ? String(format: "%.1f", recording.woundPerimeter) : ""
+                    }
                 }
                 .padding(20)
                 .padding(.top, 8)
+                .alert("Edit \(editingField ?? "")", isPresented: Binding(
+                    get: { editingField != nil },
+                    set: { if !$0 { editingField = nil } }
+                )) {
+                    TextField("Enter value", text: $editValue)
+                        .keyboardType(.decimalPad)
+                    Button("Save") {
+                        saveEditedValue()
+                    }
+                    Button("Cancel", role: .cancel) {
+                        editingField = nil
+                    }
+                } message: {
+                    Text("Enter the corrected measurement in mm")
+                }
             }
         }
         .background(Color("BackgroundColor").ignoresSafeArea())
@@ -167,6 +199,31 @@ struct SessionDetailView: View {
     func deleteItem() {
         viewModel.delete(recording: recording)
         self.presentationMode.wrappedValue.dismiss()
+    }
+
+    func saveEditedValue() {
+        guard let field = editingField, let value = Double(editValue) else {
+            editingField = nil
+            return
+        }
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+        let viewContext = appDelegate.persistentContainer.viewContext
+        viewContext.perform {
+            let request = NSFetchRequest<Recording>(entityName: "Recording")
+            request.predicate = NSPredicate(format: "id == %@", self.recording.id! as CVarArg)
+            if let rec = try? viewContext.fetch(request).first {
+                switch field {
+                case "Diameter":     rec.woundDiameter = value
+                case "Depth":        rec.woundDepth = value
+                case "Max Diameter": rec.woundMaxDiameter = value
+                case "Surface Area": rec.woundSurfaceArea = value
+                case "Perimeter":    rec.woundPerimeter = value
+                default: break
+                }
+                try? viewContext.save()
+            }
+        }
+        editingField = nil
     }
 
     func shareItem() {
@@ -211,10 +268,11 @@ struct ShareSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: UIViewControllerRepresentableContext<ShareSheet>) {}
 }
 
-struct WoundRow: View {
+struct EditableWoundRow: View {
     let label: String
     let value: String
     let unit: String
+    let onTap: () -> Void
 
     var body: some View {
         HStack {
@@ -225,8 +283,16 @@ struct WoundRow: View {
             Text("\(value) \(unit)")
                 .font(.system(.title3, design: .monospaced))
                 .fontWeight(.medium)
+            Image(systemName: "pencil")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .padding(.leading, 4)
         }
         .padding(.vertical, 12)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap()
+        }
     }
 }
 

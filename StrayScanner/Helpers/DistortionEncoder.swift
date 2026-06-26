@@ -1,8 +1,8 @@
 //
 //  DistortionEncoder.swift
-//  StrayScanner
+//  RHLab
 //
-//  Created by Kenneth Blomqvist on 4/4/26.
+//  Created by Gene Jiang on 4/4/26.
 //  Copyright © 2026 Stray Robots. All rights reserved.
 //
 

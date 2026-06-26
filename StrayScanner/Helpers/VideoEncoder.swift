@@ -1,9 +1,9 @@
 //
 //  VideoEncoder.swift
-//  StrayScanner
+//  RHLab
 //
-//  Created by Kenneth Blomqvist on 12/30/20.
-//  Copyright © 2020 Stray Robots. All rights reserved.
+//  Created by Gene Jiang on 5/30/2026.
+//  Copyright © 2026 RHLab. All rights reserved.
 //
 
 import Foundation

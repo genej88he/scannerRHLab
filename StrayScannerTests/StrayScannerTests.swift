@@ -1,9 +1,9 @@
 //
 //  StrayScannerTests.swift
-//  StrayScannerTests
+//  RHLab
 //
-//  Created by Kenneth Blomqvist on 2/27/21.
-//  Copyright © 2021 Stray Robots. All rights reserved.
+//  Created by Gene Jiang on 5/30/2026.
+//  Copyright © 2026 RHLab. All rights reserved.
 //
 
 import XCTest

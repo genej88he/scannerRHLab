@@ -1,45 +1,10 @@
 //
-//  Untitled.swift
-//  StrayScanner
-//
-//  Created by Marianny De Leon on 5/14/26.
-//  Copyright © 2026 Stray Robots. All rights reserved.
-//
-
-//
 //  WoundMeasurementViewController.swift
 //  StrayScanner
 //
+//  Created by Gene Jiang on 5/30/2026.
+//  Copyright © 2026 RHLab. All rights reserved.
 //
-//import UIKit
-//
-//class WoundMeasurementViewController: UIViewController {
-//    
-//    private let datasetDirectory: URL
-//    
-//    init(datasetDirectory: URL) {
-//        self.datasetDirectory = datasetDirectory
-//        super.init(nibName: nil, bundle: nil)
-//    }
-//    
-//    required init?(coder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
-//    
-//    override func viewDidLoad() {
-//        super.viewDidLoad()
-//        view.backgroundColor = UIColor(named: "BackgroundColor")
-//        loadDataset()
-//    }
-//    
-//    private func loadDataset() {
-//        let depthDirectory = datasetDirectory.appendingPathComponent("depth")
-//        let odometryPath = datasetDirectory.appendingPathComponent("odometry.csv")
-//        print("Dataset directory: \(datasetDirectory)")
-//        print("Depth directory: \(depthDirectory)")
-//        print("Odometry path: \(odometryPath)")
-//    }
-//}
 
 import UIKit
 import simd
@@ -51,7 +16,6 @@ class WoundMeasurementViewController: UIViewController {
     private let datasetDirectory: URL
     private var recording: Recording
     
-    
     // UI Elements
     private let titleLabel = UILabel()
     private let statusLabel = UILabel()
@@ -59,6 +23,7 @@ class WoundMeasurementViewController: UIViewController {
     private let lengthLabel = UILabel()
     private let widthLabel = UILabel()
     private let depthLabel = UILabel()
+    private let areaLabel = UILabel()
     private let closeButton = UIButton(type: .system)
     
     init(datasetDirectory: URL, recordingEntry: Recording) {
@@ -73,7 +38,7 @@ class WoundMeasurementViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor(named: "BackgroundColor") ?? .black
+        view.backgroundColor = UIColor(named: "BackgroundColor") ?? .systemBackground
         setupUI()
         processDataset()
     }
@@ -103,7 +68,7 @@ class WoundMeasurementViewController: UIViewController {
         view.addSubview(measurementsView)
         
         // Measurement labels
-        for label in [lengthLabel, widthLabel, depthLabel] {
+        for label in [lengthLabel, widthLabel, depthLabel, areaLabel] {
             label.textColor = UIColor.label
             label.font = UIFont.monospacedDigitSystemFont(ofSize: 20, weight: .medium)
             label.textAlignment = .right
@@ -114,16 +79,20 @@ class WoundMeasurementViewController: UIViewController {
         // Add dividers
         let divider1 = makeDivider()
         let divider2 = makeDivider()
+        let divider3 = makeDivider()
         measurementsView.addSubview(divider1)
         measurementsView.addSubview(divider2)
+        measurementsView.addSubview(divider3)
         
-        // Length row label
+        // Row labels
         let lengthTitle = makeRowLabel("Length")
         let widthTitle = makeRowLabel("Width")
         let depthTitle = makeRowLabel("Depth")
+        let areaTitle = makeRowLabel("Surface Area")
         measurementsView.addSubview(lengthTitle)
         measurementsView.addSubview(widthTitle)
         measurementsView.addSubview(depthTitle)
+        measurementsView.addSubview(areaTitle)
         
         // Close button
         closeButton.setTitle("Close", for: .normal)
@@ -146,7 +115,7 @@ class WoundMeasurementViewController: UIViewController {
             measurementsView.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 32),
             measurementsView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             measurementsView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            measurementsView.heightAnchor.constraint(equalToConstant: 180),
+            measurementsView.heightAnchor.constraint(equalToConstant: 240),
             
             lengthTitle.topAnchor.constraint(equalTo: measurementsView.topAnchor, constant: 12),
             lengthTitle.leadingAnchor.constraint(equalTo: measurementsView.leadingAnchor),
@@ -172,6 +141,16 @@ class WoundMeasurementViewController: UIViewController {
             depthTitle.leadingAnchor.constraint(equalTo: measurementsView.leadingAnchor),
             depthLabel.centerYAnchor.constraint(equalTo: depthTitle.centerYAnchor),
             depthLabel.trailingAnchor.constraint(equalTo: measurementsView.trailingAnchor),
+            
+            divider3.topAnchor.constraint(equalTo: depthTitle.bottomAnchor, constant: 12),
+            divider3.leadingAnchor.constraint(equalTo: measurementsView.leadingAnchor),
+            divider3.trailingAnchor.constraint(equalTo: measurementsView.trailingAnchor),
+            divider3.heightAnchor.constraint(equalToConstant: 0.5),
+            
+            areaTitle.topAnchor.constraint(equalTo: divider3.bottomAnchor, constant: 12),
+            areaTitle.leadingAnchor.constraint(equalTo: measurementsView.leadingAnchor),
+            areaLabel.centerYAnchor.constraint(equalTo: areaTitle.centerYAnchor),
+            areaLabel.trailingAnchor.constraint(equalTo: measurementsView.trailingAnchor),
             
             closeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -32),
             closeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -200,18 +179,15 @@ class WoundMeasurementViewController: UIViewController {
         let depthDir = datasetDirectory.appendingPathComponent("depth")
         let odometryFile = datasetDirectory.appendingPathComponent("odometry.csv")
         
-        // Check files exist
         guard FileManager.default.fileExists(atPath: depthDir.path),
               FileManager.default.fileExists(atPath: odometryFile.path) else {
             statusLabel.text = "Could not find dataset files.\nPath: \(datasetDirectory.lastPathComponent)"
             return
         }
         
-        // Count depth frames
         let frames = (try? FileManager.default.contentsOfDirectory(atPath: depthDir.path))?.count ?? 0
         statusLabel.text = "Found \(frames) depth frames.\nProcessing point cloud..."
         
-        // Process on background thread
         DispatchQueue.global(qos: .userInitiated).async {
             let result = self.buildPointCloudAndMeasure(depthDir: depthDir, odometryFile: odometryFile)
             DispatchQueue.main.async {
@@ -224,19 +200,18 @@ class WoundMeasurementViewController: UIViewController {
         let length: Float
         let width: Float
         let depth: Float
+        let area: Float
         let frameCount: Int
     }
     
     private func buildPointCloudAndMeasure(depthDir: URL, odometryFile: URL) -> MeasurementResult {
-        // Step 1: Parse odometry.csv
         guard let odometryFrames = parseOdometry(url: odometryFile) else {
             print("Failed to parse odometry")
-            return MeasurementResult(length: 0, width: 0, depth: 0, frameCount: 0)
+            return MeasurementResult(length: 0, width: 0, depth: 0, area: 0, frameCount: 0)
         }
         
         var allPoints: [SIMD3<Float>] = []
         
-        // Step 2: Process each frame
         for odometry in odometryFrames {
             let frameStr = String(format: "%06d", odometry.frame)
             let depthPath = depthDir.appendingPathComponent("\(frameStr).png")
@@ -244,11 +219,9 @@ class WoundMeasurementViewController: UIViewController {
                 .deletingLastPathComponent()
                 .appendingPathComponent("confidence/\(frameStr).png")
             
-            // Step 3: Load depth and confidence maps
             guard let depthMap = load16BitPNG(url: depthPath) else { continue }
             let confidenceMap = loadConfidencePNG(url: confidencePath)
             
-            // Step 4: Unproject pixels to 3D and transform to world space
             let points = unprojectFrame(
                 depthMap: depthMap,
                 confidenceMap: confidenceMap,
@@ -259,20 +232,18 @@ class WoundMeasurementViewController: UIViewController {
         
         guard !allPoints.isEmpty else {
             print("No points generated")
-            return MeasurementResult(length: 0, width: 0, depth: 0, frameCount: 0)
+            return MeasurementResult(length: 0, width: 0, depth: 0, area: 0, frameCount: 0)
         }
         
-        // Step 5: Segment wound vs healthy tissue using depth threshold
         let measurements = measureWound(points: allPoints)
         return MeasurementResult(
             length: measurements.length,
             width: measurements.width,
             depth: measurements.depth,
+            area: measurements.area,
             frameCount: odometryFrames.count
         )
     }
-    
-    // MARK: - Odometry Parsing
     
     private struct OdometryFrame {
         let frame: Int
@@ -290,7 +261,7 @@ class WoundMeasurementViewController: UIViewController {
         }
         
         var frames: [OdometryFrame] = []
-        let lines = contents.components(separatedBy: "\n").dropFirst() // skip header
+        let lines = contents.components(separatedBy: "\n").dropFirst()
         
         for line in lines {
             let cols = line.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
@@ -311,12 +282,10 @@ class WoundMeasurementViewController: UIViewController {
         return frames.isEmpty ? nil : frames
     }
     
-    // MARK: - Depth Map Loading
-    
     private struct DepthMap {
         let width: Int
         let height: Int
-        let data: [Float] // depth in meters
+        let data: [Float]
     }
     
     private func load16BitPNG(url: URL) -> DepthMap? {
@@ -337,12 +306,10 @@ class WoundMeasurementViewController: UIViewController {
         var depthValues: [Float] = []
         depthValues.reserveCapacity(width * height)
         
-        // 16-bit PNG: 2 bytes per pixel, big-endian
         for i in 0..<(width * height) {
             let high = UInt16(bytes[i * 2])
             let low = UInt16(bytes[i * 2 + 1])
             let rawValue = (high << 8) | low
-            // Convert mm to meters
             depthValues.append(Float(rawValue) / 1000.0)
         }
         
@@ -364,36 +331,24 @@ class WoundMeasurementViewController: UIViewController {
         return Array(UnsafeBufferPointer(start: bytes, count: count))
     }
     
-    // MARK: - Unprojection
-    
     private func unprojectFrame(depthMap: DepthMap,
                                 confidenceMap: [UInt8]?,
                                 odometry: OdometryFrame) -> [SIMD3<Float>] {
         var points: [SIMD3<Float>] = []
         let width = depthMap.width
         let height = depthMap.height
-        
-        // Sample every 2nd pixel for performance
         let step = 2
         
         for v in stride(from: 0, to: height, by: step) {
             for u in stride(from: 0, to: width, by: step) {
                 let idx = v * width + u
-                
-                // Skip low confidence pixels
                 if let conf = confidenceMap, conf[idx] == 0 { continue }
-                
                 let depth = depthMap.data[idx]
-                // Skip invalid depth
                 guard depth > 0.05 && depth < 1.5 else { continue }
-                
-                // Unproject to camera space
                 let xCam = (Float(u) - odometry.cx) * depth / odometry.fx
                 let yCam = (Float(v) - odometry.cy) * depth / odometry.fy
                 let zCam = depth
                 let pointCam = SIMD3<Float>(xCam, yCam, zCam)
-                
-                // Transform to world space using pose
                 let pointWorld = odometry.rotation.act(pointCam) + odometry.position
                 points.append(pointWorld)
             }
@@ -401,35 +356,28 @@ class WoundMeasurementViewController: UIViewController {
         return points
     }
     
-    // MARK: - Measurement
-    
     private struct WoundMeasurements {
-        let length: Float // mm
-        let width: Float  // mm
-        let depth: Float  // mm
+        let length: Float
+        let width: Float
+        let depth: Float
+        let area: Float
     }
     
     private func measureWound(points: [SIMD3<Float>]) -> WoundMeasurements {
-        // Step 1: Find ground plane using median Z of all points
         let zValues = points.map { $0.z }.sorted()
         let groundZ = zValues[zValues.count / 2]
-        
-        // Step 2: Separate wound points (deeper than ground by threshold)
-        // Wound points are further from camera (larger Z in camera space)
-        let threshold: Float = 0.003 // 3mm below ground plane
+        let threshold: Float = 0.003
         let woundPoints = points.filter { $0.z > groundZ + threshold }
         let healthyPoints = points.filter { $0.z <= groundZ + threshold }
         
         guard !woundPoints.isEmpty else {
             print("No wound points found")
-            return WoundMeasurements(length: 0, width: 0, depth: 0)
+            return WoundMeasurements(length: 0, width: 0, depth: 0, area: 0)
         }
         
-        // Step 3: Fit plane to healthy tissue using mean
         let healthyZ = healthyPoints.isEmpty ? groundZ :
-        healthyPoints.map { $0.z }.reduce(0, +) / Float(healthyPoints.count)
+            healthyPoints.map { $0.z }.reduce(0, +) / Float(healthyPoints.count)
         
-        // Step 4: Get wound extents in X and Y
         let woundX = woundPoints.map { $0.x }
         let woundY = woundPoints.map { $0.y }
         let woundZ = woundPoints.map { $0.z }
@@ -441,16 +389,17 @@ class WoundMeasurementViewController: UIViewController {
         return WoundMeasurements(
             length: lengthM * 1000,
             width: widthM * 1000,
-            depth: depthM * 1000
+            depth: depthM * 1000,
+            area: lengthM * widthM * 1000 * 1000
         )
-        
-        
     }
+
     private func showResults(_ result: MeasurementResult) {
         statusLabel.text = "Scan processed successfully."
         lengthLabel.text = String(format: "%.1f mm", result.length)
         widthLabel.text = String(format: "%.1f mm", result.width)
         depthLabel.text = String(format: "%.1f mm", result.depth)
+        areaLabel.text = String(format: "%.1f mm\u{00B2}", result.area)
         measurementsView.isHidden = false
         
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
@@ -462,6 +411,7 @@ class WoundMeasurementViewController: UIViewController {
                 rec.woundDiameter = Double(result.length)
                 rec.woundMaxDiameter = Double(result.width)
                 rec.woundDepth = Double(result.depth)
+                rec.woundSurfaceArea = Double(result.area)
                 try? viewContext.save()
             }
         }
